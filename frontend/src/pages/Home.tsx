@@ -1,20 +1,42 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import CodeEditor from "../components/CodeEditor";
+import ScoreCard from "../components/ScoreCard";
+
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
 import api from "../services/api";
+
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export default function Home() {
   const [language, setLanguage] = useState("javascript");
 
-  const [code, setCode] = useState(`function hello() {
-  console.log("Hello World");
+  const [code, setCode] = useState(`function add(a, b) {
+  return a + b;
 }`);
 
   const [review, setReview] = useState("");
 
   const [loading, setLoading] = useState(false);
 
+  // Dashboard scores (temporary values)
+  const [scores] = useState({
+    overall: "9.2/10",
+    security: "9.5/10",
+    performance: "8.8/10",
+    readability: "9.0/10",
+    practices: "9.3/10",
+  });
+
   const handleReview = async () => {
+    if (!code.trim()) {
+      setReview("# ⚠️ Please enter some code first.");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -26,39 +48,85 @@ export default function Home() {
       setReview(response.data.review);
     } catch (error) {
       console.error(error);
-      setReview("❌ Failed to connect to the backend.");
+
+      setReview(`# ❌ Error
+
+Unable to review your code.
+
+Please check:
+
+- Backend server is running
+- Gemini API key is valid
+- Internet connection
+`);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-slate-950 text-white">
       <Navbar />
 
-      <main className="p-6">
+      <main className="max-w-7xl mx-auto p-6">
 
         {/* Header */}
 
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-cyan-400">
-            AI Code Reviewer
+            🤖 AI Code Reviewer
           </h1>
 
           <p className="text-slate-400 mt-2">
-            Analyze your code with AI, detect bugs, improve performance,
-            and receive intelligent suggestions.
+            Analyze your code using Gemini AI. Detect bugs, improve
+            performance, enhance security, and follow best coding practices.
           </p>
         </div>
 
-        {/* Top Controls */}
+        {/* Dashboard */}
+
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+
+          <ScoreCard
+            title="Overall"
+            score={scores.overall}
+            icon="⭐"
+          />
+
+          <ScoreCard
+            title="Security"
+            score={scores.security}
+            icon="🔒"
+          />
+
+          <ScoreCard
+            title="Performance"
+            score={scores.performance}
+            icon="⚡"
+          />
+
+          <ScoreCard
+            title="Readability"
+            score={scores.readability}
+            icon="📖"
+          />
+
+          <ScoreCard
+            title="Best Practices"
+            score={scores.practices}
+            icon="✅"
+          />
+
+        </div>
+
+        {/* Controls */}
 
         <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
 
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 outline-none focus:border-cyan-400"
+            className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-500"
           >
             <option value="javascript">JavaScript</option>
             <option value="typescript">TypeScript</option>
@@ -69,25 +137,28 @@ export default function Home() {
 
           <button
             onClick={handleReview}
-            className="bg-cyan-500 hover:bg-cyan-600 px-6 py-2 rounded-lg font-semibold transition"
+            disabled={loading}
+            className="bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-600 px-6 py-2 rounded-lg font-semibold transition"
           >
-            {loading ? "Reviewing..." : "Review Code"}
+            {loading ? "Reviewing..." : "🚀 Review Code"}
           </button>
 
         </div>
 
-        {/* Main Layout */}
+        {/* Main Grid */}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          {/* Left Panel */}
+          {/* Code Editor */}
 
-          <div className="bg-slate-800 rounded-xl shadow-lg overflow-hidden">
+          <div className="bg-slate-900 rounded-xl shadow-lg overflow-hidden">
 
-            <div className="border-b border-slate-700 px-4 py-3">
-              <h2 className="text-xl font-semibold">
-                Code Editor
+            <div className="px-4 py-3 border-b border-slate-800">
+
+              <h2 className="text-lg font-semibold">
+                💻 Code Editor
               </h2>
+
             </div>
 
             <CodeEditor
@@ -98,19 +169,103 @@ export default function Home() {
 
           </div>
 
-          {/* Right Panel */}
+          {/* AI Review */}
 
-          <div className="bg-slate-800 rounded-xl shadow-lg p-6">
+          <div className="bg-slate-900 rounded-xl shadow-lg overflow-hidden flex flex-col">
 
-            <h2 className="text-2xl font-bold mb-6 text-cyan-400">
-              AI Review
-            </h2>
+            <div className="px-4 py-3 border-b border-slate-800 flex justify-between">
 
-            <div className="bg-slate-900 rounded-lg p-5 h-[70vh] overflow-auto border border-slate-700">
+              <h2 className="text-lg font-semibold text-cyan-400">
+                🤖 AI Review
+              </h2>
 
-              <pre className="whitespace-pre-wrap text-slate-300 leading-7">
-                {review || "Click 'Review Code' to analyze your code."}
-              </pre>
+              {loading && (
+                <span className="text-sm text-slate-400">
+                  Gemini is thinking...
+                </span>
+              )}
+
+            </div>
+
+            <div className="flex-1 overflow-y-auto bg-slate-950 p-6">
+
+              {loading ? (
+
+                <div className="flex justify-center items-center h-full">
+
+                  <div className="text-center">
+
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-cyan-400 mx-auto"></div>
+
+                    <p className="mt-5 text-slate-400">
+                      Analyzing your code...
+                    </p>
+
+                  </div>
+
+                </div>
+
+              ) : (
+
+                <div
+                  className="markdown-body"
+                  style={{
+                    backgroundColor: "#020617",
+                    color: "white",
+                    padding: "20px",
+                    borderRadius: "12px",
+                    overflowX: "auto",
+                  }}
+                >
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      code({ className, children }) {
+                        const match = /language-(\w+)/.exec(className || "");
+
+                        if (match) {
+                          return (
+                            <SyntaxHighlighter
+                              style={oneDark}
+                              language={match[1]}
+                              PreTag="div"
+                            >
+                              {String(children).replace(/\n$/, "")}
+                            </SyntaxHighlighter>
+                          );
+                        }
+
+                        return (
+                          <code className={className}>
+                            {children}
+                          </code>
+                        );
+                      },
+                    }}
+                  >
+                    {review ||
+`# 👋 Welcome
+
+Click **Review Code** to analyze your program.
+
+The AI will generate:
+
+- ⭐ Overall Score
+- 📝 Summary
+- 🐞 Bugs
+- 🔒 Security Issues
+- ⚡ Performance
+- 📖 Code Quality
+- ✅ Best Practices
+- 📈 Time Complexity
+- 💾 Space Complexity
+- 🚀 Optimized Code
+- 🎯 Final Verdict`}
+                  </ReactMarkdown>
+
+                </div>
+
+              )}
 
             </div>
 
