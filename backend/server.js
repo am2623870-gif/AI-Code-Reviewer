@@ -1,36 +1,21 @@
 const express = require("express");
 const cors = require("cors");
+require("dotenv").config();
+
+const reviewRoutes = require("./routes/reviewRoutes");
 
 const app = express();
-
-const PORT = 8000;
 
 app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("AI Code Reviewer Backend Running 🚀");
+  res.send("🚀 AI Code Reviewer Backend Running");
 });
 
-app.post("/api/review", (req, res) => {
-  const { language, code } = req.body;
+app.use("/api", reviewRoutes);
 
-  console.log("Language:", language);
-  console.log("Code:", code);
-
-  res.json({
-    success: true,
-    review: `
-✅ No syntax errors found.
-
-💡 Variables can be renamed to improve readability.
-
-⚡ Time Complexity: O(n)
-
-🔒 No obvious security issues.
-`
-  });
-});
+const PORT = process.env.PORT || 8000;
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
