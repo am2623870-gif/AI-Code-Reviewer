@@ -2,6 +2,7 @@ interface HistoryItem {
   language: string;
   code: string;
   review: string;
+  mode: string;
   date: string;
 }
 
@@ -15,8 +16,8 @@ export default function ReviewHistory({
   onLoad,
 }: Props) {
   return (
-    <div className="bg-slate-900 rounded-xl p-4 shadow-lg">
-      <h2 className="text-xl font-semibold text-cyan-400 mb-4">
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-lg backdrop-blur-xl">
+      <h2 className="mb-5 text-xl font-bold text-cyan-400">
         📜 Review History
       </h2>
 
@@ -30,15 +31,21 @@ export default function ReviewHistory({
             <button
               key={index}
               onClick={() => onLoad(item)}
-              className="w-full text-left bg-slate-800 hover:bg-slate-700 rounded-lg p-3 transition"
+              className="w-full rounded-xl border border-slate-700 bg-slate-800 p-4 text-left transition hover:border-cyan-500 hover:bg-slate-700"
             >
-              <div className="font-semibold capitalize">
-                {item.language}
+              <div className="flex items-center justify-between">
+                <span className="font-semibold capitalize text-white">
+                  {item.language}
+                </span>
+
+                <span className="rounded-lg bg-cyan-500/10 px-2 py-1 text-xs font-medium text-cyan-400">
+                  {item.mode}
+                </span>
               </div>
 
-              <div className="text-sm text-slate-400">
+              <p className="mt-2 text-sm text-slate-400">
                 {item.date}
-              </div>
+              </p>
             </button>
           ))}
         </div>

@@ -20,7 +20,6 @@ interface HistoryItem {
 }
 
 export default function Home() {
-
   const [language, setLanguage] = useState("javascript");
 
   const [mode, setMode] = useState("Review");
@@ -46,20 +45,15 @@ export default function Home() {
   });
 
   const [history, setHistory] = useState<HistoryItem[]>(() => {
-
     const saved = localStorage.getItem("reviewHistory");
-
     return saved ? JSON.parse(saved) : [];
-
   });
 
   const extractScores = (text: string) => {
-
     const getScore = (regex: RegExp) =>
       text.match(regex)?.[1] ?? "--";
 
     setScores({
-
       overall:
         getScore(/Overall Score.*?(\d+(\.\d+)?\/10)/is),
 
@@ -74,33 +68,22 @@ export default function Home() {
 
       practices:
         getScore(/Best Practices Score.*?(\d+(\.\d+)?\/10)/is),
-
     });
-
   };
 
   const handleReview = async () => {
-
     if (!code.trim()) {
-
       setReview("# Please enter some code.");
-
       return;
-
     }
 
     try {
-
       setLoading(true);
 
       const response = await api.post("/review", {
-
         language,
-
         code,
-
         mode,
-
       });
 
       const aiReview = response.data.review;
@@ -108,7 +91,8 @@ export default function Home() {
       setReview(aiReview);
 
       extractScores(aiReview);
-            const newHistory: HistoryItem = {
+
+      const newHistory: HistoryItem = {
         language,
         code,
         review: aiReview,
@@ -127,9 +111,7 @@ export default function Home() {
         "reviewHistory",
         JSON.stringify(updatedHistory)
       );
-
-    } catch (error) {
-
+          } catch (error) {
       console.error(error);
 
       setReview(`# ❌ AI Request Failed
@@ -145,41 +127,28 @@ Please check:
 • Backend route is correct
 
 `);
-
     } finally {
-
       setLoading(false);
-
     }
-
   };
 
   const copyReview = async () => {
-
     if (!review) return;
 
     try {
-
       await navigator.clipboard.writeText(review);
 
       setCopied(true);
 
       setTimeout(() => {
-
         setCopied(false);
-
       }, 2000);
-
     } catch (err) {
-
       console.error(err);
-
     }
-
   };
 
   const downloadMarkdown = () => {
-
     if (!review) return;
 
     const blob = new Blob([review], {
@@ -191,31 +160,23 @@ Please check:
     const a = document.createElement("a");
 
     a.href = url;
-
     a.download = "AI-Code-Review.md";
 
     a.click();
 
     URL.revokeObjectURL(url);
-
   };
 
   const loadReview = (item: HistoryItem) => {
-
     setLanguage(item.language);
-
     setCode(item.code);
-
     setMode(item.mode);
-
     setReview(item.review);
 
     extractScores(item.review);
-
   };
 
   return (
-
     <div className="min-h-screen bg-slate-950 text-white">
 
       <Navbar />
@@ -234,7 +195,8 @@ Please check:
         <section className="mt-16">
           <Dashboard scores={scores} />
         </section>
-                <section className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <section className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-8">
 
           {/* ================= LEFT PANEL ================= */}
 
@@ -287,16 +249,27 @@ Please check:
                 </div>
 
               </div>
-
-              {/* Upload */}
+                            {/* Upload */}
 
               <div className="border-b border-slate-800 p-6">
 
                 <FileUploader
-                  fileName={fileName}
-                  setFileName={setFileName}
-                  setCode={setCode}
+                  onFileLoad={(
+                    uploadedCode,
+                    detectedLanguage,
+                    uploadedFileName
+                  ) => {
+                    setCode(uploadedCode);
+                    setLanguage(detectedLanguage);
+                    setFileName(uploadedFileName);
+                  }}
                 />
+
+                {fileName && (
+                  <p className="mt-3 text-sm text-cyan-400">
+                    📄 {fileName}
+                  </p>
+                )}
 
               </div>
 
@@ -327,7 +300,8 @@ Please check:
           </div>
 
         </section>
-                {/* ================= REVIEW HISTORY ================= */}
+
+        {/* ================= REVIEW HISTORY ================= */}
 
         <section className="mt-16">
 
@@ -341,7 +315,5 @@ Please check:
       </main>
 
     </div>
-
   );
-
 }
